@@ -2,7 +2,7 @@ import { Fragment, useState } from 'react';
 import { Dialog, Transition } from '@headlessui/react';
 import { ChatBubbleLeftRightIcon, XMarkIcon } from '@heroicons/react/24/outline';
 import axios from 'axios';
-import ReactGA from 'react-ga4';
+import { trackEvent } from '../lib/analytics';
 
 const API_BASE_URL = import.meta.env.VITE_BACKEND_URL || 'http://localhost:8001';
 
@@ -26,7 +26,7 @@ function FeedbackWidget() {
       });
 
       // Track feedback event
-      ReactGA.event({
+      trackEvent({
         category: 'User',
         action: 'Submitted Feedback',
         label: window.location.pathname,

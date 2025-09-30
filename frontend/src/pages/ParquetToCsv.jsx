@@ -1,10 +1,17 @@
 import { useEffect } from 'react';
-import ReactGA from 'react-ga4';
 import FileConverter from '../components/FileConverter';
+import { trackPageview } from '../lib/analytics';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 function ParquetToCsv() {
+  usePageMeta({
+    title: 'Parquet to CSV Converter & Viewer | ParquetFormatter',
+    description: 'Upload files or URLs to convert Parquet files to CSV or preview them instantly in your browser.',
+    keywords: ['parquet viewer', 'parquet to csv', 'parquet converter', 'online parquet viewer'],
+  });
+
   useEffect(() => {
-    ReactGA.send({ hitType: 'pageview', page: '/parquet-to-csv' });
+    trackPageview('/parquet-to-csv');
   }, []);
 
   return (

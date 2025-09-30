@@ -1,7 +1,9 @@
 # backend/parquetformatter_api/tests/test_preview_route.py
 import pytest
 from httpx import AsyncClient
-import os
+import httpx
+from pathlib import Path
+from urllib.parse import urlparse
 import pandas as pd
 import pyarrow as pa
 import pyarrow.parquet as pq
@@ -42,6 +44,51 @@ def sample_files(tmpdir_factory):
         "parquet": str(parquet_path),
         "unsupported": str(unsupported_path),
     }
+
+@pytest.fixture
+def mock_remote_download(monkeypatch, sample_files):
+    base_urls = {
+        "parquet": "https://mock.local/sample.parquet",
+        "ndjson": "https://mock.local/sample.ndjson",
+    }
+
+    url_to_path = {base_urls[key]: Path(sample_files[key]) for key in base_urls}
+
+    class DummyStream:
+        def __init__(self, url: str):
+            self._content = url_to_path[url].read_bytes()
+            filename = Path(urlparse(url).path).name or "download"
+            self.headers = {"content-disposition": f'attachment; filename="{filename}"'}
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        def raise_for_status(self):
+            return None
+
+        async def aiter_bytes(self, chunk_size: int):
+            yield self._content
+
+    class DummyClient:
+        def __init__(self, *args, **kwargs):
+            pass
+
+        async def __aenter__(self):
+            return self
+
+        async def __aexit__(self, exc_type, exc, tb):
+            return False
+
+        def stream(self, method: str, url: str):
+            if url not in url_to_path:
+                raise httpx.RequestError(f"URL {url} not mocked", request=None)
+            return DummyStream(url)
+
+    monkeypatch.setattr('app.utils.uploads.httpx.AsyncClient', DummyClient)
+    return base_urls
 
 async def test_preview_parquet(client: AsyncClient, sample_files):
     with open(sample_files["parquet"], "rb") as f:
@@ -91,6 +138,16 @@ async def test_preview_ndjson(client: AsyncClient, sample_files):
     ]
     assert data["rows"][0] == {"a": 1, "b": "foo"}
 
+async def test_preview_via_url(client: AsyncClient, mock_remote_download):
+    response = await client.post(
+        "/v1/preview",
+        data={"url": mock_remote_download["parquet"]},
+    )
+
+    assert response.status_code == 200
+    data = response.json()
+    assert any(column["name"] == "col1" for column in data["schema"])
+
 async def test_preview_unsupported_file(client: AsyncClient, sample_files):
     with open(sample_files["unsupported"], "rb") as f:
         files = {"file": ("sample.txt", f, "text/plain")}
@@ -100,3 +157,9 @@ async def test_preview_unsupported_file(client: AsyncClient, sample_files):
     detail = response.json()["detail"]
     assert detail["code"] == "unsupported_preview"
     assert "Unsupported file type" in detail["message"]
+
+
+async def test_preview_requires_input(client: AsyncClient):
+    response = await client.post("/v1/preview")
+    assert response.status_code == 400
+    assert response.json()["detail"]["code"] == "missing_file"

@@ -132,3 +132,4 @@ def get_csv_schema_and_preview(path: str | Path) -> dict:
     schema = [{"name": name, "dtype": str(dtype)} for name, dtype, *_ in schema_rows]
     rows = preview_arrow.to_pylist()
     return {"schema": schema, "rows": rows}
+

@@ -1,10 +1,17 @@
 import { useEffect } from 'react';
-import ReactGA from 'react-ga4';
 import FileConverter from '../components/FileConverter';
+import { trackPageview } from '../lib/analytics';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 function NdjsonToCsv() {
+  usePageMeta({
+    title: 'NDJSON to CSV Converter & Viewer | ParquetFormatter',
+    description: 'Transform NDJSON or JSONL files and URLs into flattened CSV exports ready for Excel or Sheets.',
+    keywords: ['ndjson viewer', 'ndjson to csv', 'jsonl viewer', 'ndjson converter'],
+  });
+
   useEffect(() => {
-    ReactGA.send({ hitType: 'pageview', page: '/ndjson-to-csv' });
+    trackPageview('/ndjson-to-csv');
   }, []);
 
   return (

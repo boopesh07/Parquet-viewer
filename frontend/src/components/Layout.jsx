@@ -120,7 +120,7 @@ function Layout({ children }) {
           <div className="text-center text-gray-600 dark:text-gray-400 text-sm">
             <p>© 2025 ParquetFormatter.com - Fast, Free, No-Signup Data Conversion</p>
             <p className="mt-2">
-              Convert Parquet, CSV, and NDJSON files instantly. All processing happens securely with no data stored.
+              View and convert Parquet, CSV, and NDJSON files instantly—secure processing with no data stored.
             </p>
           </div>
         </div>

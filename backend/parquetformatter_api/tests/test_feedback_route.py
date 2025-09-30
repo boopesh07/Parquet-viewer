@@ -1,11 +1,20 @@
 # backend/parquetformatter_api/tests/test_feedback_route.py
+from unittest.mock import AsyncMock
+
 import pytest
 from httpx import AsyncClient
 
 # Mark all tests in this module as async
 pytestmark = pytest.mark.asyncio
 
-async def test_post_feedback_success(client: AsyncClient):
+
+@pytest.fixture(autouse=True)
+def mock_save_feedback(monkeypatch):
+    stub = AsyncMock()
+    monkeypatch.setattr("app.routes.feedback.save_feedback", stub)
+    return stub
+
+async def test_post_feedback_success(client: AsyncClient, mock_save_feedback):
     """
     Test that valid feedback is successfully submitted.
     """
@@ -13,6 +22,7 @@ async def test_post_feedback_success(client: AsyncClient):
     response = await client.post("/v1/feedback", json=payload)
     assert response.status_code == 200
     assert response.json() == {"status": "ok", "message": "Feedback received"}
+    mock_save_feedback.assert_awaited()
 
 async def test_post_feedback_missing_message(client: AsyncClient):
     """

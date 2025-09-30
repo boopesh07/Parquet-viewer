@@ -7,27 +7,28 @@ import {
   ArrowRightIcon,
 } from '@heroicons/react/24/outline';
 import { useEffect } from 'react';
-import ReactGA from 'react-ga4';
+import { trackPageview } from '../lib/analytics';
+import { usePageMeta } from '../hooks/usePageMeta';
 
 const features = [
   {
     name: 'Lightning Fast',
-    description: 'Stream large files efficiently with optimized conversion algorithms.',
+    description: 'Stream large data files efficiently with optimized converters and viewers.',
     icon: BoltIcon,
   },
   {
     name: 'Secure & Private',
-    description: 'No data stored. All processing happens securely without saving your files.',
+    description: 'No data stored. All processing happens locally or via secure in-memory workers.',
     icon: ShieldCheckIcon,
   },
   {
     name: 'Free Forever',
-    description: 'No signup required. Convert up to 5 files at once, each up to 500MB.',
+    description: 'No signup required. Convert or preview up to 5 files or URLs at once (500MB each).',
     icon: CurrencyDollarIcon,
   },
   {
     name: 'Multiple Formats',
-    description: 'Convert between Parquet, CSV, and NDJSON formats seamlessly.',
+    description: 'View and convert Parquet, CSV, and NDJSON datasets seamlessly.',
     icon: ArrowPathIcon,
   },
 ];
@@ -64,8 +65,22 @@ const converters = [
 ];
 
 function Home() {
+  usePageMeta({
+    title: 'Parquet Viewer & Converter | NDJSON Viewer | ParquetFormatter',
+    description:
+      'ParquetFormatter is a fast Parquet viewer and NDJSON viewer that converts between Parquet, CSV, and NDJSON formats with drag-and-drop uploads or URLs.',
+    keywords: [
+      'parquet viewer',
+      'parquet converter',
+      'ndjson viewer',
+      'ndjson converter',
+      'parquet to csv',
+      'csv to parquet',
+    ],
+  });
+
   useEffect(() => {
-    ReactGA.send({ hitType: 'pageview', page: '/' });
+    trackPageview('/');
   }, []);
 
   return (
@@ -75,11 +90,11 @@ function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-5xl font-bold text-gray-900 dark:text-white mb-6">
-              Convert Data Files Instantly
+              Parquet Viewer & NDJSON Viewer Online
             </h1>
             <p className="text-xl text-gray-600 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              Fast, free, and secure online converter for Parquet, CSV, and NDJSON files.
-              No signup required. Process large files up to 500MB with ease.
+              Fast, free, and secure Parquet viewer and NDJSON viewer with built-in converters.
+              Preview or convert up to 500MB per file without installing anything.
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Link to="/parquet-to-csv" className="btn-primary inline-flex items-center justify-center">
@@ -102,7 +117,7 @@ function Home() {
               Why Choose ParquetFormatter?
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              The fastest and most reliable way to convert your data files
+              The fastest way to preview or convert Parquet, CSV, and NDJSON files
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
@@ -132,7 +147,7 @@ function Home() {
               Available Converters
             </h2>
             <p className="text-lg text-gray-600 dark:text-gray-400">
-              Choose your conversion tool below
+              Choose a viewer or converter below
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
