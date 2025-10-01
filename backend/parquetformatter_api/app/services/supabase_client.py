@@ -39,10 +39,24 @@ def get_supabase_client() -> Client:
     logger.debug("Initialising Supabase client for %s", url)
     return create_client(url, key)
 
+def _get_client_or_raise(detail_code: str) -> Client:
+    """Resolve the Supabase client or raise an HTTP error if misconfigured."""
+    try:
+        return get_supabase_client()
+    except RuntimeError as exc:
+        logger.exception("Supabase configuration error: %s", exc)
+        raise HTTPException(
+            status_code=500,
+            detail={
+                "code": detail_code,
+                "message": "Supabase credentials are not configured.",
+            },
+        ) from exc
+
 
 async def insert_feedback(record: Dict[str, Any]) -> None:
     """Insert a feedback record into Supabase."""
-    client = get_supabase_client()
+    client = _get_client_or_raise("feedback_supabase_not_configured")
 
     def _execute() -> None:
         client.table(SUPABASE_FEEDBACK_TABLE).insert(record).execute()
@@ -62,7 +76,7 @@ async def insert_feedback(record: Dict[str, Any]) -> None:
 
 async def insert_session_metric(record: Dict[str, Any]) -> None:
     """Insert a session metric record into Supabase."""
-    client = get_supabase_client()
+    client = _get_client_or_raise("metric_supabase_not_configured")
 
     def _execute() -> None:
         client.table(SUPABASE_SESSION_TABLE).insert(record).execute()
