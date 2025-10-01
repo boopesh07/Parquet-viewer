@@ -15,7 +15,6 @@ fi
 : "${VERCEL_TOKEN:?Set VERCEL_TOKEN in environment or frontend/.env.production}"
 : "${PRODUCTION_BACKEND_URL:?Set PRODUCTION_BACKEND_URL with your deployed API URL}"
 VITE_BACKEND_URL="${VITE_BACKEND_URL:-$PRODUCTION_BACKEND_URL}"
-: "${VITE_GA_MEASUREMENT_ID:?Set VITE_GA_MEASUREMENT_ID to your GA4 measurement id}"
 
 DEFAULT_GIT_NAME=$(git -C "$ROOT_DIR" config user.name 2>/dev/null || echo "$USER")
 DEFAULT_GIT_EMAIL=$(git -C "$ROOT_DIR" config user.email 2>/dev/null || echo "")
@@ -45,7 +44,6 @@ VERCEL_GIT_COMMIT_AUTHOR_NAME="$VERCEL_GIT_NAME" \
 VERCEL_GIT_COMMIT_AUTHOR_EMAIL="$VERCEL_GIT_EMAIL" \
 vercel "${VERCEL_ARGS[@]}" \
   --env "VITE_BACKEND_URL=${VITE_BACKEND_URL}" \
-  --env "VITE_GA_MEASUREMENT_ID=${VITE_GA_MEASUREMENT_ID}" \
   --env "PRODUCTION_BACKEND_URL=${PRODUCTION_BACKEND_URL}"
 
 popd >/dev/null

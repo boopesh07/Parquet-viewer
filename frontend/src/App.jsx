@@ -5,10 +5,10 @@ import ParquetToCsv from './pages/ParquetToCsv';
 import CsvToParquet from './pages/CsvToParquet';
 import NdjsonToCsv from './pages/NdjsonToCsv';
 import CsvToNdjson from './pages/CsvToNdjson';
+import { Analytics } from '@vercel/analytics/react';
 import { initAnalytics } from './lib/analytics';
 
-const GA_MEASUREMENT_ID = import.meta.env.VITE_GA_MEASUREMENT_ID;
-initAnalytics(GA_MEASUREMENT_ID);
+initAnalytics();
 
 function App() {
   return (
@@ -21,6 +21,7 @@ function App() {
           <Route path="/ndjson-to-csv" element={<NdjsonToCsv />} />
           <Route path="/csv-to-ndjson" element={<CsvToNdjson />} />
         </Routes>
+        <Analytics />
       </Layout>
     </Router>
   );

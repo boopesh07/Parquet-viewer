@@ -21,7 +21,7 @@ Fast, free, and secure online converter for Parquet, CSV, and NDJSON files.
 - **Feedback Widget**: Floating feedback button for user input
 
 ### Analytics & Tracking
-- **Google Analytics 4**: Complete visitor and conversion tracking
+- **Vercel Web Analytics**: Privacy-friendly visitor and conversion tracking
 - **Custom Events**: Track file uploads, conversions, downloads, and feedback
 - **Session Tracking**: Monitor user behavior and engagement
 - **Page-specific Analytics**: Detailed insights per converter page
@@ -108,7 +108,6 @@ yarn install
 Edit `/app/frontend/.env`:
 ```env
 VITE_BACKEND_URL=http://localhost:8001
-VITE_GA_MEASUREMENT_ID=G-XXXXXXXXXX  # Your Google Analytics ID
 ```
 
 3. **Start the frontend server:**
@@ -118,12 +117,11 @@ sudo supervisorctl restart frontend
 
 The frontend will run on `http://localhost:3000`
 
-## 📊 Google Analytics Setup
+## 📊 Vercel Web Analytics Setup
 
-1. Create a Google Analytics 4 property at https://analytics.google.com/
-2. Copy your Measurement ID (format: `G-XXXXXXXXXX`)
-3. Add it to `/app/frontend/.env` as `VITE_GA_MEASUREMENT_ID`
-4. Restart the frontend: `sudo supervisorctl restart frontend`
+1. Enable Web Analytics for the project at https://vercel.com
+2. Install the analytics package: `yarn add @vercel/analytics`
+3. Redeploy the frontend so the `<Analytics />` component is available client-side
 
 ### Tracked Events
 
