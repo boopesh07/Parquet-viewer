@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import json
+from unittest.mock import MagicMock
 
 import pytest
 from fastapi import HTTPException
@@ -76,3 +77,33 @@ async def test_insert_session_metric_raises_when_supabase_unconfigured(monkeypat
 
     assert excinfo.value.status_code == 500
     assert excinfo.value.detail["code"] == "metric_supabase_not_configured"
+
+
+async def test_save_feedback_readonly_log_is_non_fatal(monkeypatch):
+    """Read-only log destinations should not break feedback persistence."""
+
+    captured: list[dict[str, object]] = []
+
+    class DummyTable:
+        def insert(self, record):  # type: ignore[override]
+            captured.append(record)
+            return self
+
+        def execute(self):  # type: ignore[override]
+            return None
+
+    class DummyClient:
+        def table(self, name):  # type: ignore[override]
+            return DummyTable()
+
+    supabase_client.get_supabase_client.cache_clear()
+    monkeypatch.setattr(supabase_client, "get_supabase_client", DummyClient)
+
+    mocked_open = MagicMock(side_effect=OSError("Read-only file system"))
+    monkeypatch.setattr("builtins.open", mocked_open)
+
+    record = {"message": "Readonly", "client_host": "cli"}
+    await persistence.save_feedback(record)
+
+    assert captured and captured[0]["message"] == "Readonly"
+    mocked_open.assert_called_once()

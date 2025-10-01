@@ -21,12 +21,10 @@ async def save_feedback(record: Dict[str, Any]) -> None:
     try:
         with open(FEEDBACK_FILE_PATH, "a", encoding="utf-8") as fh:
             fh.write(json.dumps(record, default=str) + "\n")
-    except Exception as exc:  # pragma: no cover - filesystem issues
-        logger.exception("Failed to append feedback to local log")
-        raise HTTPException(
-            status_code=500,
-            detail={"code": "feedback_log_failed", "message": "Could not log feedback."},
-        ) from exc
+    except OSError as exc:  # pragma: no cover - filesystem issues in readonly envs
+        logger.warning("Skipping feedback log write: %s", exc, exc_info=True)
+    except Exception as exc:  # pragma: no cover - unexpected failures
+        logger.exception("Unexpected error while appending feedback to local log")
 
 
 async def save_session_metric(record: Dict[str, Any]) -> None:
