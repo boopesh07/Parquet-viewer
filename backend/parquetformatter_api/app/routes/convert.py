@@ -27,13 +27,56 @@ class ConversionSpec:
     output_suffix: str
 
 
+def _conversion_error(filename: str, exc: Exception) -> HTTPException:
+    """Wrap low-level conversion failures with a client-facing HTTP error."""
+    message = f"Failed to convert {filename}: {exc}"
+    return HTTPException(status_code=400, detail={"code": "conversion_failed", "message": message})
+
+
+def _prefetch_stream(stored: StoredUpload, spec: ConversionSpec) -> Iterator[bytes]:
+    """Prime a stream so conversion errors surface before streaming begins."""
+    try:
+        raw_iterable = spec.stream_fn(stored.path)
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _conversion_error(stored.filename, exc) from exc
+    iterator = iter(raw_iterable)
+
+    try:
+        first_chunk = next(iterator)
+    except StopIteration:
+        return iter(())
+    except HTTPException:
+        raise
+    except Exception as exc:
+        raise _conversion_error(stored.filename, exc) from exc
+
+    def generator() -> Iterator[bytes]:
+        try:
+            yield first_chunk
+            yield from iterator
+        except HTTPException:
+            raise
+        except Exception as exc:
+            raise _conversion_error(stored.filename, exc) from exc
+
+    return generator()
+
+
 def _build_single_file_response(stored: StoredUpload, spec: ConversionSpec) -> StreamingResponse:
     """Stream a converted payload for a single upload."""
     filename = Path(stored.filename).with_suffix(spec.output_suffix).name
 
+    try:
+        stream = _prefetch_stream(stored, spec)
+    except Exception:
+        cleanup_uploads([stored])
+        raise
+
     def iterator() -> Iterator[bytes]:
         try:
-            yield from spec.stream_fn(stored.path)
+            yield from stream
         finally:
             cleanup_uploads([stored])
 
@@ -44,9 +87,18 @@ def _build_single_file_response(stored: StoredUpload, spec: ConversionSpec) -> S
 def _build_zip_response(stored_uploads: List[StoredUpload], spec: ConversionSpec) -> StreamingResponse:
     """Bundle multiple converted results into a streaming ZIP archive."""
     archive = zipstream.ZipStream(compress_type=zipstream.ZIP_DEFLATED)
-    for stored in stored_uploads:
+
+    prepared_streams: List[tuple[StoredUpload, Iterator[bytes]]] = []
+    try:
+        for stored in stored_uploads:
+            prepared_streams.append((stored, _prefetch_stream(stored, spec)))
+    except Exception:
+        cleanup_uploads(stored_uploads)
+        raise
+
+    for stored, stream in prepared_streams:
         member_name = Path(stored.filename).with_suffix(spec.output_suffix).name
-        archive.add(spec.stream_fn(stored.path), member_name)
+        archive.add(stream, member_name)
 
     def iterator() -> Iterator[bytes]:
         try:

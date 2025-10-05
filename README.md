@@ -85,13 +85,19 @@ Fast, free, and secure online converter for Parquet, CSV, and NDJSON files.
 
 1. **Install Python dependencies:**
 ```bash
-cd /app/backend
-pip install -r requirements.txt
+cd backend
+python3 -m venv .venv  # create once
+source .venv/bin/activate
+pip install -r parquetformatter_api/requirements.txt
 ```
 
-2. **Start the backend server:**
+> If you already have a `.venv`, just activate it before installing.
+
+2. **Start the backend server (local development):**
 ```bash
-sudo supervisorctl restart backend
+cd backend
+source .venv/bin/activate
+python server.py
 ```
 
 The backend will run on `http://localhost:8001`
@@ -100,19 +106,20 @@ The backend will run on `http://localhost:8001`
 
 1. **Install Node.js dependencies:**
 ```bash
-cd /app/frontend
+cd frontend
 yarn install
 ```
 
 2. **Configure environment variables:**
-Edit `/app/frontend/.env`:
+Edit `frontend/.env`:
 ```env
 VITE_BACKEND_URL=http://localhost:8001
 ```
 
-3. **Start the frontend server:**
+3. **Start the frontend server (local development):**
 ```bash
-sudo supervisorctl restart frontend
+cd frontend
+yarn dev
 ```
 
 The frontend will run on `http://localhost:3000`
